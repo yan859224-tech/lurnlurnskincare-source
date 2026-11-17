@@ -1,0 +1,8 @@
+import React,{useState} from 'react';
+import {api} from '../services/api.js';
+export function ConsultationPage({c}){
+ const [message,setMessage]=useState(''),[messages,setMessages]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ async function refresh(){setBusy(true);setError('');try{const data=await api.conversations();setMessages(data.messages||[])}catch(e){setError(e.message)}finally{setBusy(false)}}
+ async function send(e){e.preventDefault();if(!message.trim()||busy)return;setBusy(true);setError('');try{const data=await api.send({text:message.trim(),clientMessageId:crypto.randomUUID()});setMessages(previous=>[...previous,data.message]);setMessage('')}catch(e){setError(e.message)}finally{setBusy(false)}}
+ return <section className="consultation"><p>PERSONAL SKINCARE SUPPORT</p><h1>{c.lang==='km'?'ជជែកជាមួយអ្នកប្រឹក្សាស្បែក':'Chat with a skincare advisor'}</h1><p>{c.lang==='km'?'ផ្ញើសំណួររបស់អ្នក ហើយរង់ចាំអ្នកប្រឹក្សាឆ្លើយតប។':'Send your question and wait for a human advisor. This is not an automated diagnosis.'}</p><button onClick={refresh} disabled={busy}>Refresh replies</button><div aria-live="polite">{messages.map(m=><article className="chat-message" key={m.id}><strong>{m.senderRole==='customer'?'You':'Advisor'}</strong><p>{m.text}</p><small>{m.senderRole==='customer'?'Sent · awaiting advisor': 'Advisor reply'}</small></article>)}</div>{error&&<p role="alert">{error}</p>}<form onSubmit={send}><textarea aria-label="Message to advisor" required maxLength={2000} value={message} onChange={e=>setMessage(e.target.value)} placeholder="How can we help?"/><button disabled={busy||!message.trim()}>{busy?'Sending…':'Send'}</button></form></section>
+}
